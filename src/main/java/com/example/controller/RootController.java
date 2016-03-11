@@ -1,18 +1,28 @@
 package com.example.controller;
 
+import com.example.entity.User;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestWrapper;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
+import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Necros on 10.03.2016.
@@ -20,10 +30,11 @@ import javax.servlet.http.HttpServletRequest;
 @Controller
 public class RootController {
     @RequestMapping(value = "/", method = RequestMethod.GET)
-    public ModelAndView welcomePage() {
-        ModelAndView modelAndView = new ModelAndView();
-        modelAndView.setViewName("main");
-        return modelAndView;
+    public String welcomePage(HttpServletRequest request) {
+        if (!(request.isUserInRole("ROLE_ADMIN") || request.isUserInRole("ROLE_USER"))){
+            return "redirect:/login";
+        }
+        return "main";
     }
 
     @RequestMapping(value = "/login", method = RequestMethod.GET)
@@ -41,7 +52,20 @@ public class RootController {
         model.setViewName("login");
 
         return model;
+    }
 
+    @RequestMapping(value = "/register", method = RequestMethod.GET)
+    public ModelAndView getRegisterPage(){
+        return new ModelAndView("register").addObject(new User());
+    }
+
+    @RequestMapping(value = "/register", method = RequestMethod.POST)
+    public String registerUser(@Valid User user, BindingResult result, Map<String,Object> model){
+        if (result.hasErrors()){
+            return "register";
+        }else {
+            return "redirect:/login";
+        }
     }
 
     // for 403 access denied page

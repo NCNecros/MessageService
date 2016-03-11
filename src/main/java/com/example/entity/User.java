@@ -1,6 +1,9 @@
 package com.example.entity;
 
 
+import org.hibernate.validator.constraints.Email;
+import org.hibernate.validator.constraints.NotEmpty;
+
 import javax.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
@@ -13,16 +16,23 @@ import java.util.Set;
 public class User {
 
     @Column(name = "firstname", nullable = false)
+    @NotEmpty(message = "Имя не может быть пустым")
     private String firstName;
     @Column(name = "lastname", nullable = false)
+    @NotEmpty(message = "Фамилия не может быть пустой")
     private String lastName;
     @Column(name = "surname", nullable = true)
-    private String surname;
+    private String surName;
     @Id
+    @NotEmpty(message = "Имя пользователя не может быть пустым")
     @Column(name = "username", unique = true, nullable = false, length = 45)
     private String username;
     @Column(name = "password", nullable = false, length = 60)
+    @NotEmpty(message = "Пароль не может быть пустым")
     private String password;
+    @Column(name = "email", nullable = false, length = 255)
+    @NotEmpty
+    @Email(message = "Неправильный формат email")
     private String email;
     @Column(name = "enabled", nullable = false)
     private boolean enabled;
@@ -75,5 +85,37 @@ public class User {
 
     public void setUserRole(Set<UserRole> userRole) {
         this.userRole = userRole;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
+    public String getSurName() {
+        return surName;
+    }
+
+    public void setSurName(String surname) {
+        this.surName = surname;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 }

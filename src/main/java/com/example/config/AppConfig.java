@@ -1,9 +1,7 @@
 package com.example.config;
 
 import com.example.MessageServiceApplication;
-import org.hibernate.Hibernate;
 import org.hibernate.SessionFactory;
-import org.hibernate.cfg.Environment;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -13,13 +11,9 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.orm.hibernate4.HibernateTransactionManager;
 import org.springframework.orm.hibernate4.LocalSessionFactoryBuilder;
-import org.springframework.orm.jpa.JpaTransactionManager;
-import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
-import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
-import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-import org.springframework.transaction.annotation.TransactionManagementConfigurer;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import org.springframework.validation.Validator;
+import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
 import org.springframework.web.servlet.view.JstlView;
 
@@ -31,7 +25,7 @@ import java.util.Properties;
 @EnableTransactionManagement
 @Import(SecurityConfig.class)
 @EnableJpaRepositories(basePackageClasses = MessageServiceApplication.class)
-public class AppConfig{
+public class AppConfig {
 
     @Value("${dataSource.driverClassName}")
     private String driver;
@@ -57,7 +51,7 @@ public class AppConfig{
     public SessionFactory sessionFactory() {
         LocalSessionFactoryBuilder builder = new LocalSessionFactoryBuilder(configureDataSource());
         builder.scanPackages("com.example")
-        .addProperties(getHibernataProperties());
+                .addProperties(getHibernataProperties());
         return builder.buildSessionFactory();
     }
 
@@ -65,8 +59,8 @@ public class AppConfig{
         Properties properties = new Properties();
         properties.put("hibernate.format_sql", "true");
         properties.put("hibrnate.show_sql", "true");
-        properties.put("hibernate.dialect","org.hibernate.dialect.PostgreSQLDialect");
-        properties.put("hibernate.hbm2ddl.auto","update");
+        properties.put("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
+        properties.put("hibernate.hbm2ddl.auto", "update");
         return properties;
     }
 
