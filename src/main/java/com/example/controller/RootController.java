@@ -1,17 +1,26 @@
 package com.example.controller;
 
+import com.example.entity.Message;
 import com.example.entity.User;
+import com.example.entity.UserRole;
+import com.example.repository.MessageRepository;
+import com.example.repository.UserRepository;
+import com.example.repository.UserRoleRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.LockedException;
+import org.springframework.security.authentication.encoding.BasePasswordEncoder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestWrapper;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -21,6 +30,7 @@ import org.springframework.web.servlet.ModelAndView;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -29,12 +39,44 @@ import java.util.Map;
  */
 @Controller
 public class RootController {
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private MessageRepository messageRepository;
+    @Autowired
+    private UserRoleRepository userRoleRepository;
+    @Autowired
+    PasswordEncoder passwordEncoder;
+
     @RequestMapping(value = "/", method = RequestMethod.GET)
-    public String welcomePage(HttpServletRequest request) {
+    public ModelAndView welcomePage(HttpServletRequest request) {
         if (!(request.isUserInRole("ROLE_ADMIN") || request.isUserInRole("ROLE_USER"))){
-            return "redirect:/login";
+            return new ModelAndView("redirect:/login");
         }
-        return "main";
+        List<Message> messages = messageRepository.findBySender(userRepository.findUserByUsername(request.getUserPrincipal().getName()));
+
+        ModelAndView modelAndView = new ModelAndView("main");
+        modelAndView.addObject("messages",messages);
+        modelAndView.addObject("message", new Message());
+        return modelAndView;
+    }
+
+    @RequestMapping(value = "/", method = RequestMethod.POST)
+    public String sendMessage(@Valid Message form, BindingResult result, @RequestParam("recipientName")String recipientName, HttpServletRequest request, Map<String, Object> model){
+        if (result.hasErrors()){
+            return "main";
+        }
+        User recipient = userRepository.findUserByUsername(recipientName);
+        if (recipient == null){
+            model.put("recipientError","Такой пользователь не найден");
+            return "main";
+        }
+        User sender = userRepository.findUserByUsername(request.getUserPrincipal().getName());
+        form.setSender(sender);
+        form.setRecipient(recipient);
+        form.setDateTime(new Date(System.currentTimeMillis()));
+        messageRepository.save(form);
+        return "redirect:/";
     }
 
     @RequestMapping(value = "/login", method = RequestMethod.GET)
@@ -63,9 +105,18 @@ public class RootController {
     public String registerUser(@Valid User user, BindingResult result, Map<String,Object> model){
         if (result.hasErrors()){
             return "register";
-        }else {
-            return "redirect:/login";
         }
+        if (userRepository.findUserByUsername(user.getUsername())!=null){
+            result.addError(new FieldError("user","username","Пользователь уже существует"));
+            return "register";
+        }
+
+        UserRole role = new UserRole(user,"ROLE_USER");
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setEnabled(true);
+        userRepository.save(user);
+        userRoleRepository.save(role);
+        return "redirect:/login";
     }
 
     // for 403 access denied page
@@ -81,7 +132,6 @@ public class RootController {
             System.out.println(userDetail);
 
             model.addObject("username", userDetail.getUsername());
-
         }
 
         model.setViewName("403error");

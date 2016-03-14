@@ -66,7 +66,7 @@ public class AppConfig {
 
 
     @Bean
-    public HibernateTransactionManager txManager() {
+    public HibernateTransactionManager transactionManager() {
         return new HibernateTransactionManager(sessionFactory());
     }
 
