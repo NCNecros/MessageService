@@ -13,4 +13,5 @@ import java.util.List;
 @Component
 public interface MessageRepository extends CrudRepository<Message, Long> {
     List<Message> findBySender(User sender);
+    List<Message> findByRecipient(User recipient);
 }

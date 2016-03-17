@@ -1,16 +1,15 @@
 package com.example.service;
 
 import com.example.entity.User;
-import com.example.entity.UserRole;
+import com.example.entity.Userrole;
 import com.example.repository.UserRepository;
+import com.example.repository.UserRoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,13 +26,15 @@ public class MyUserDetailsService implements UserDetailsService {
 
     @Autowired
     UserRepository userRepository;
+    @Autowired
+    UserRoleRepository userRoleRepository;
 
     @Transactional(readOnly = true)
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findUserByUsername(username);
-
-        List<GrantedAuthority> authorities = buildUserAuthority(user.getUserRole());
+        List<Userrole> userroles = userRoleRepository.findByUser(user);
+        List<GrantedAuthority> authorities = buildUserAuthority(new HashSet<>(userroles));
 
         return buildUserForAuthentification(user, authorities);
     }
@@ -43,11 +44,11 @@ public class MyUserDetailsService implements UserDetailsService {
     }
 
 
-    private List<GrantedAuthority> buildUserAuthority(Set<UserRole> userRoles) {
+    private List<GrantedAuthority> buildUserAuthority(Set<Userrole> userroles) {
         Set<GrantedAuthority> setAuth = new HashSet<>();
 
-        for (UserRole userRole : userRoles) {
-            setAuth.add(new SimpleGrantedAuthority(userRole.getRole()));
+        for (Userrole userrole : userroles) {
+            setAuth.add(new SimpleGrantedAuthority(userrole.getUserrole()));
         }
         List<GrantedAuthority> result = new ArrayList<>(setAuth);
         return result;

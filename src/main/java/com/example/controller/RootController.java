@@ -1,33 +1,31 @@
 package com.example.controller;
 
+import com.example.entity.AddressBook;
 import com.example.entity.Message;
 import com.example.entity.User;
-import com.example.entity.UserRole;
-import com.example.repository.MessageRepository;
+import com.example.entity.Userrole;
 import com.example.repository.UserRepository;
 import com.example.repository.UserRoleRepository;
+import com.example.service.AddressBookService;
+import com.example.service.MessageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.LockedException;
-import org.springframework.security.authentication.encoding.BasePasswordEncoder;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestWrapper;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
-import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
-import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.util.Date;
@@ -42,27 +40,50 @@ public class RootController {
     @Autowired
     private UserRepository userRepository;
     @Autowired
-    private MessageRepository messageRepository;
+    private MessageService messageService;
     @Autowired
     private UserRoleRepository userRoleRepository;
     @Autowired
     PasswordEncoder passwordEncoder;
+    @Autowired
+    private AddressBookService addressBookService;
 
     @RequestMapping(value = "/", method = RequestMethod.GET)
-    public ModelAndView welcomePage(HttpServletRequest request) {
+    public ModelAndView welcomePage(HttpServletRequest request,@RequestParam(value = "user", required = false) String user) {
         if (!(request.isUserInRole("ROLE_ADMIN") || request.isUserInRole("ROLE_USER"))){
             return new ModelAndView("redirect:/login");
         }
-        List<Message> messages = messageRepository.findBySender(userRepository.findUserByUsername(request.getUserPrincipal().getName()));
+        User currentUser = userRepository.findUserByUsername(request.getUserPrincipal().getName());
 
+        List<Message> messages = messageService.getMessagesByRecipient(currentUser);
+        List<AddressBook> addressBookList = addressBookService.getAddressBooksByOwner(currentUser);
         ModelAndView modelAndView = new ModelAndView("main");
+        if (user != null){
+            modelAndView.addObject("user", user);
+        }
         modelAndView.addObject("messages",messages);
         modelAndView.addObject("message", new Message());
+        modelAndView.addObject("addressBook", new AddressBook());
+        modelAndView.addObject("addressBookList", addressBookList);
         return modelAndView;
     }
 
+    @RequestMapping(value = "/messages/del/{id}", method = RequestMethod.GET)
+    public String delMessage(@PathVariable Long id){
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        Message message = messageService.getMessageById(id);
+        if (message.getRecipient().getUsername().equals(username)){
+            messageService.deleteMessage(message);
+        }
+        return "redirect:/";
+    }
+
     @RequestMapping(value = "/", method = RequestMethod.POST)
-    public String sendMessage(@Valid Message form, BindingResult result, @RequestParam("recipientName")String recipientName, HttpServletRequest request, Map<String, Object> model){
+    public String sendMessage(@Valid Message form, BindingResult result, @RequestParam("recipientName")String recipientName,
+                              HttpServletRequest request, Map<String, Object> model){
+        User currentUser = userRepository.findUserByUsername(request.getUserPrincipal().getName());
+        List<Message> messages = messageService.getMessagesByRecipient(currentUser);
+
         if (result.hasErrors()){
             return "main";
         }
@@ -75,7 +96,7 @@ public class RootController {
         form.setSender(sender);
         form.setRecipient(recipient);
         form.setDateTime(new Date(System.currentTimeMillis()));
-        messageRepository.save(form);
+        messageService.save(form);
         return "redirect:/";
     }
 
@@ -101,6 +122,7 @@ public class RootController {
         return new ModelAndView("register").addObject(new User());
     }
 
+    @Transactional
     @RequestMapping(value = "/register", method = RequestMethod.POST)
     public String registerUser(@Valid User user, BindingResult result, Map<String,Object> model){
         if (result.hasErrors()){
@@ -111,11 +133,15 @@ public class RootController {
             return "register";
         }
 
-        UserRole role = new UserRole(user,"ROLE_USER");
+        Userrole userrole = new Userrole(user,"ROLE_USER");
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setEnabled(true);
         userRepository.save(user);
-        userRoleRepository.save(role);
+        if (userRepository.count()==1){
+            Userrole roleAdmin = new Userrole(user,"ROLE_ADMIN");
+            userRoleRepository.save(roleAdmin);
+        }
+        userRoleRepository.save(userrole);
         return "redirect:/login";
     }
 

@@ -1,7 +1,7 @@
 package com.example.repository;
 
+import com.example.entity.AddressBook;
 import com.example.entity.User;
-import com.example.entity.Userrole;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Component;
 
@@ -11,8 +11,7 @@ import java.util.List;
  * Created by Necros on 14.03.2016.
  */
 @Component
-public interface UserRoleRepository extends CrudRepository<Userrole, Integer>{
-
-    List<Userrole> findByUser(User user);
-
+public interface AddressBookRepository extends CrudRepository<AddressBook, Long>{
+    List<AddressBook> findByOwner(User owner);
+    AddressBook findByOwnerAndUser(User owner, User user);
 }

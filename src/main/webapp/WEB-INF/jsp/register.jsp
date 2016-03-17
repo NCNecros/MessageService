@@ -6,26 +6,8 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 
-<nav class="navbar navbar-default navbar-static-top" role="navigation">
-    <ul class="nav navbar-nav">
-        <li class="active">
-            <a href="/searchfio">Поиск по полису</a>
-        </li>
-        <li>
-            <a href="/searchpolis">Поиск по ФИО</a>
-        </li>
-        <li>
-            <a href="/searchnewpolis">Поиск нового полиса по старому</a>
-        </li>
-
-        <li class="">
-            <a href="/logout">Выход</a>
-        </li>
-    </ul>
-</nav>
-
 <div class="container">
-    <form:form method="post" action="/register" role="form" modelAttribute="user">
+    <form:form method="post" action="${pageContext.request.contextPath}/register" role="form" modelAttribute="user">
         <div class="row">
 
             <div class="form-group">
@@ -94,8 +76,6 @@
 
             <div class="form-group">
                 <div class="row">
-
-
                     <label for="email" class="col-xs-2 col-sm-2 col-md-2 col-lg-2">E-mail</label>
                     <div class="col-xs-10 col-sm-10 col-md-10 col-lg-10">
                         <form:input path="email" id="email" type="text" class="form-control" placeholder="E-Mail"

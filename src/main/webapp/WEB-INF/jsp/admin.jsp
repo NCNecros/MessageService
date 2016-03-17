@@ -5,8 +5,8 @@
 	<h1>Title : ${title}</h1>
 	<h1>Message : ${message}</h1>
 
-	<c:url value="/logout" var="logoutUrl" />
-	<form action="${logoutUrl}" method="post" id="logoutForm">
+
+	<form action="${pageContext.request.contextPath}/logout" method="post" id="logoutForm">
 		<input type="hidden" name="${_csrf.parameterName}"
 			value="${_csrf.token}" />
 	</form>

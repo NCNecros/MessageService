@@ -5,39 +5,37 @@ import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.persistence.*;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 /**
  * Created by Necros on 10.03.2016.
  */
 @Entity
-@Table(name = "users")
+@Table(name = "USERS")
 public class User {
-
-    @Column(name = "firstname", nullable = false)
+    @Column(name = "FIRSTNAME", nullable = false)
     @NotEmpty(message = "Имя не может быть пустым")
     private String firstName;
-    @Column(name = "lastname", nullable = false)
+    @Column(name = "LASTNAME", nullable = false)
     @NotEmpty(message = "Фамилия не может быть пустой")
     private String lastName;
-    @Column(name = "surname", nullable = true)
+    @Column(name = "SURNAME", nullable = true)
     private String surName;
     @Id
     @NotEmpty(message = "Имя пользователя не может быть пустым")
-    @Column(name = "username", unique = true, nullable = false, length = 45)
+    @Column(name = "USERNAME", unique = true, nullable = false, length = 45)
     private String username;
-    @Column(name = "password", nullable = false, length = 60)
+    @Column(name = "PASSWORD", nullable = false, length = 60)
     @NotEmpty(message = "Пароль не может быть пустым")
     private String password;
-    @Column(name = "email", nullable = false, length = 255)
+    @Column(name = "EMAIL", nullable = false, length = 255)
     @NotEmpty
     @Email(message = "Неправильный формат email")
     private String email;
-    @Column(name = "enabled", nullable = false)
+    @Column(name = "ENABLED", nullable = false)
     private boolean enabled;
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
-    private Set<UserRole> userRole = new HashSet<>(0);
 
     public User() {
     }
@@ -48,11 +46,14 @@ public class User {
         this.enabled = enabled;
     }
 
-    public User(String username, String password, boolean enabled, Set<UserRole> userRole) {
+    public User(String username, String password, boolean enabled, Set<Userrole> userrole) {
         this.username = username;
         this.password = password;
         this.enabled = enabled;
-        this.userRole = userRole;
+    }
+
+    public String getFio() {
+        return lastName + " ." + firstName.substring(0, 1) + (surName.isEmpty() ? "" : " ." + surName.substring(0, 1));
     }
 
     public String getUsername() {
@@ -77,14 +78,6 @@ public class User {
 
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
-    }
-
-    public Set<UserRole> getUserRole() {
-        return userRole;
-    }
-
-    public void setUserRole(Set<UserRole> userRole) {
-        this.userRole = userRole;
     }
 
     public String getLastName() {
@@ -118,4 +111,5 @@ public class User {
     public void setEmail(String email) {
         this.email = email;
     }
+
 }

@@ -10,7 +10,7 @@
 
     <div class="row">
     	<div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-    		<img src="<c:url value="/images/403.jpg"/> " class="img-responsive center-block" alt="Image">
+    		<img src="${pageContext.request.contextPath}/images/403.jpg" class="img-responsive center-block" alt="Image">
 
     	</div>
     </div>
